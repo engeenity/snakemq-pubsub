@@ -30,6 +30,13 @@ class SnakeMQPubSubTests(unittest.TestCase):
     together. Don't take these tests as a good example of how
     things should be done.
 
+    TODO
+    ----
+
+    Figure out why TravisCI pypy3 has intermitten problems with closing
+    sockets. Shouldn't affect any reasonable use case, but causes
+    testing to sometimes fail.
+
     """
 
     def setUp(self):
