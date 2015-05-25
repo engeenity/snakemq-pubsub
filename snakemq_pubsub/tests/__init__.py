@@ -19,7 +19,18 @@ import warnings
 
 class SnakeMQPubSubTests(unittest.TestCase):
 
-    """A collection of snakeMQ-PubSub tests."""
+    """A collection of snakeMQ-PubSub tests.
+
+    These tests take far longer to run than they should, apologies
+    for that. Travis CI requires some longer wait times for things
+    to pass.
+
+    In an actual production setting it's unlikely one
+    process would control a broker, publisher, and subscriber
+    together. Don't take these tests as a good example of how
+    things should be done.
+
+    """
 
     def setUp(self):
         """Start publisher, subscriber, and broker loops."""
@@ -55,21 +66,23 @@ class SnakeMQPubSubTests(unittest.TestCase):
         with warnings.catch_warnings():
             # These create warnings for sockets not closing.
             # Above "with" doesn't seem to work in suppressing them.
+            # Try/Except here in case we already closes the link
+            # during the test.
             try:
                 self.publisher.link.cleanup()
-            except OSError:
+            except (OSError, IOError):
                 pass
             try:
                 self.subscriber1.link.cleanup()
-            except OSError:
+            except (OSError, IOError):
                 pass
             try:
                 self.subscriber2.link.cleanup()
-            except OSError:
+            except (OSError, IOError):
                 pass
             try:
                 self.broker.link.cleanup()
-            except OSError:
+            except (OSError, IOError):
                 pass
         time.sleep(5)
 
