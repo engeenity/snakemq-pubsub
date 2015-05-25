@@ -3,13 +3,6 @@ snakeMQ-PubSub
 
 An implementation of the publish-subscribe pattern for snakeMQ.
 
-TODO
-----
-
--  Clean up subscriptions on disconnect on the broker.
--  Tests
--  Documentation
-
 Contributing
 ------------
 

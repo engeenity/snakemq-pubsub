@@ -18,10 +18,10 @@ setup(
     description='An implementation of the publish-subscribe pattern for snakeMQ.',
     packages=['snakemq_pubsub'],
     platforms='any',
-    #test_suite='snakemq_pubsub.tests',
-    #tests_require=[
-    #    'snakeMQ>=1.2'
-    #],
+    test_suite='snakemq_pubsub.tests',
+    tests_require=[
+        'snakeMQ>=1.2'
+    ],
     install_requires=[
         'snakeMQ>=1.2'
     ],
