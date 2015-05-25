@@ -66,7 +66,7 @@ class SnakeMQPubSubTests(unittest.TestCase):
         with warnings.catch_warnings():
             # These create warnings for sockets not closing.
             # Above "with" doesn't seem to work in suppressing them.
-            # Try/Except here in case we already closes the link
+            # Try/Except here in case we already closed the link
             # during the test.
             try:
                 self.publisher.link.cleanup()

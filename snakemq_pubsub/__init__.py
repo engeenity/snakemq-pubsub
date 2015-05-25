@@ -17,7 +17,7 @@ import snakemq.message
 import threading
 
 logger = logging.getLogger("snakemq_pubsub")
-__version__ = "0.1.0.dev0"
+__version__ = "0.1.0"
 
 
 class MQConnectorMixin(object):
