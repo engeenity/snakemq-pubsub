@@ -55,10 +55,22 @@ class SnakeMQPubSubTests(unittest.TestCase):
         with warnings.catch_warnings():
             # These create warnings for sockets not closing.
             # Above "with" doesn't seem to work in suppressing them.
-            self.publisher.link.cleanup()
-            self.subscriber1.link.cleanup()
-            self.subscriber2.link.cleanup()
-            self.broker.link.cleanup()
+            try:
+                self.publisher.link.cleanup()
+            except OSError:
+                pass
+            try:
+                self.subscriber1.link.cleanup()
+            except OSError:
+                pass
+            try:
+                self.subscriber2.link.cleanup()
+            except OSError:
+                pass
+            try:
+                self.broker.link.cleanup()
+            except OSError:
+                pass
         time.sleep(5)
 
     def subscriber1_onrecv(self, conn, ident, message):
