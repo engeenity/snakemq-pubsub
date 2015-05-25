@@ -22,7 +22,11 @@ __version__ = "0.1.0.dev0"
 
 class MQConnectorMixin(object):
 
-    """One end of a snakeMQ connection."""
+    """One end of a snakeMQ connection.
+
+    Broker, Subscriber, and Publisher all inherit from this class.
+
+    """
 
     def __init__(self, identity):
         """Set up messaging and a link."""
@@ -45,7 +49,7 @@ class MQConnectorMixin(object):
 
     def link_on_disconnect(self, conn):
         """Log when the link disconnects."""
-        print("LINK: {my_ident} disconnected from {conn}".format(
+        logger.info("LINK: {my_ident} disconnected from {conn}".format(
             my_ident=self.identity, conn=conn))
 
     def messenger_on_connect(self, conn, ident):
@@ -58,7 +62,7 @@ class MQConnectorMixin(object):
 
     def messenger_on_disconnect(self, conn, ident):
         """Log any new new messenger disconnections."""
-        print(
+        logger.info(
             "MESSENGER: {my_ident} disconnected from {conn} ({ident}).".format(
                 my_ident=self.identity,
                 conn=conn,
@@ -88,7 +92,11 @@ class MQConnectorMixin(object):
 
 class BrokerClient(MQConnectorMixin):
 
-    """Client connection to a broker server."""
+    """Client connection to a broker server.
+
+    Publisher and Subscriber inherit from this class.
+
+    """
 
     def __init__(self, broker_host, broker_port, broker_identity, identity):
         """Initialize a connection to a broker."""
