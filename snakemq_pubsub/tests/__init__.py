@@ -14,7 +14,9 @@ import unittest
 from snakemq_pubsub import Publisher, Subscriber, Broker
 import threading
 import time
-import warnings
+import gc
+
+SLEEP_MODIFIER = 4
 
 
 class SnakeMQPubSubTests(unittest.TestCase):
@@ -41,6 +43,7 @@ class SnakeMQPubSubTests(unittest.TestCase):
 
     def setUp(self):
         """Start publisher, subscriber, and broker loops."""
+        gc.collect()
         self.subscriber1_lock = threading.RLock()
         self.subscriber1_messages = list()
         self.subscriber2_lock = threading.RLock()
@@ -70,28 +73,15 @@ class SnakeMQPubSubTests(unittest.TestCase):
         self.subscriber1_thread.join()
         self.subscriber2_thread.join()
         self.publisher_thread.join()
-        with warnings.catch_warnings():
-            # These create warnings for sockets not closing.
-            # Above "with" doesn't seem to work in suppressing them.
-            # Try/Except here in case we already closed the link
-            # during the test.
-            try:
-                self.publisher.link.cleanup()
-            except (OSError, IOError):
-                pass
-            try:
-                self.subscriber1.link.cleanup()
-            except (OSError, IOError):
-                pass
-            try:
-                self.subscriber2.link.cleanup()
-            except (OSError, IOError):
-                pass
-            try:
-                self.broker.link.cleanup()
-            except (OSError, IOError):
-                pass
-        time.sleep(5)
+        # These create warnings for sockets not closing.
+        # Try/Except here in case we already closed the link
+        # during the test.
+        del self.broker
+        del self.publisher
+        del self.subscriber1
+        del self.subscriber2
+        gc.collect()
+        time.sleep(1 * SLEEP_MODIFIER)
 
     def subscriber1_onrecv(self, conn, ident, message):
         """Place subscriber1 received messages in a list."""
@@ -115,14 +105,14 @@ class SnakeMQPubSubTests(unittest.TestCase):
         """Test that simple unsubscription works."""
         self.subscriber1.subscribe("a")
         # wait to make sure subscriptions are done
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a")
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.subscriber1.unsubscribe("a")
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a2")
         # wait to make sure publishing is done
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.assertTrue("a" in self.subscriber1_messages)
         self.assertTrue("a2" not in self.subscriber1_messages)
 
@@ -130,11 +120,11 @@ class SnakeMQPubSubTests(unittest.TestCase):
         """Test simple pub/sub subscription."""
         self.subscriber1.subscribe("a")
         # wait to make sure subscriptions are done
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a")
         self.publisher.publish("b", "b")
         # wait to make sure publishing is done
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.assertTrue("a" in self.subscriber1_messages)
         self.assertTrue("b" not in self.subscriber1_messages)
 
@@ -145,12 +135,12 @@ class SnakeMQPubSubTests(unittest.TestCase):
         self.subscriber1.subscribe("c")
         self.subscriber2.subscribe("c")
         # wait to make sure subscriptions are done
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a")
         self.publisher.publish("b", "b")
         self.publisher.publish("c", "c")
         # wait to make sure publishing is done
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.assertTrue("a" in self.subscriber1_messages)
         self.assertTrue("a" not in self.subscriber2_messages)
         self.assertTrue("b" in self.subscriber2_messages)
@@ -162,19 +152,19 @@ class SnakeMQPubSubTests(unittest.TestCase):
         """Make sure we can recover from a broker crash."""
         self.subscriber1.subscribe("a")
         # wait to make sure subscription sticks
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a")
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.broker.stop()
         self.broker_thread.join()
         self.broker.link.cleanup()
-        time.sleep(15)
+        time.sleep(3 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a2")
         self.broker = Broker("localhost", 4000, "broker")
         self.broker_thread = threading.Thread(target=self.broker.run)
         self.broker_thread.start()
         self.publisher.publish("a", "a3")
-        time.sleep(15)
+        time.sleep(3 * SLEEP_MODIFIER)
         self.assertTrue("a" in self.subscriber1_messages)
         self.assertTrue("a2" in self.subscriber1_messages)
         self.assertTrue("a3" in self.subscriber1_messages)
@@ -183,14 +173,14 @@ class SnakeMQPubSubTests(unittest.TestCase):
         """Make sure a subscriber can periodically reconnect."""
         self.subscriber1.subscribe("a")
         # wait to make sure subscription sticks
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.publisher.publish("a", "a")
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.subscriber1.stop()
         self.subscriber1_thread.join()
         self.publisher.publish("a", "a2")
         self.subscriber1.run(5)
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.assertTrue("a" in self.subscriber1_messages)
         self.assertTrue("a2" in self.subscriber1_messages)
 
@@ -198,12 +188,12 @@ class SnakeMQPubSubTests(unittest.TestCase):
         """Make sure broker channel subscriptions get cleaned up."""
         self.subscriber1.subscribe("a")
         # wait to make sure subscription sticks
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         old_sub_count = len(self.broker.channel_subscribers.get("a"))
         self.broker.stop()
         self.broker_thread.join()
         self.broker.link.cleanup()
-        time.sleep(4)
+        time.sleep(1 * SLEEP_MODIFIER)
         self.assertTrue(old_sub_count == 1)
         self.assertTrue(len(self.broker.channel_subscribers.get("a")) == 0)
 
